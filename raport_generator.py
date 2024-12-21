@@ -3,6 +3,7 @@ from nfstream import NFStreamer
 import matplotlib.pyplot as plt
 import requests
 import folium
+import pandas as pd
 
 
 # Utility function to create directories
@@ -127,4 +128,90 @@ def generate_ip_location_map(*args, pcap):
 
     m.save(output_file)
     print(f"Map written to {output_file}")
+
+def generate_analysis_report(pcap_file, results_dict, output_dir='reports'):
+    """Generate comprehensive analysis report"""
+    # Create reports directory if it doesn't exist
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Generate timestamp for the report
+    timestamp = pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')
+    report_file = os.path.join(output_dir, f'analysis_report_{timestamp}.txt')
+    
+    with open(report_file, 'w') as f:
+        # Header
+        f.write("=== Network Traffic Analysis Report ===\n")
+        f.write(f"Generated at: {pd.Timestamp.now()}\n")
+        f.write(f"Analyzed file: {pcap_file}\n\n")
+        
+        # Large Flows Analysis
+        if 'large_flows' in results_dict:
+            f.write("=== Large Flows Detection ===\n")
+            for ip, count in results_dict['large_flows'].items():
+                f.write(f"IP {ip}: {count} large flows detected\n")
+            f.write("\n")
+        
+        # Asymmetrical Flows
+        if 'asymmetrical_flows' in results_dict:
+            f.write("=== Asymmetrical Flows Detection ===\n")
+            for ip, count in results_dict['asymmetrical_flows'].items():
+                f.write(f"IP {ip}: {count} asymmetrical flows detected\n")
+            f.write("\n")
+        
+        # Unusual Ports
+        if 'unusual_ports' in results_dict:
+            f.write("=== Unusual Ports Usage ===\n")
+            for ip, count in results_dict['unusual_ports'].items():
+                f.write(f"IP {ip}: {count} connections to unusual ports\n")
+            f.write("\n")
+        
+        # DNS Users
+        if 'dns_users' in results_dict:
+            f.write("=== DNS Usage Analysis ===\n")
+            for ip, count in results_dict['dns_users'].items():
+                f.write(f"IP {ip}: {count} DNS queries\n")
+            f.write("\n")
+        
+        # SYN Flood
+        if 'syn_flood' in results_dict:
+            f.write("=== SYN Flood Detection ===\n")
+            for ip, count in results_dict['syn_flood'].items():
+                f.write(f"IP {ip}: {count} SYN packets sent\n")
+            f.write("\n")
+        
+        # HTTP GET
+        if 'http_get' in results_dict:
+            f.write("=== HTTP GET Requests Analysis ===\n")
+            for ip, count in results_dict['http_get'].items():
+                f.write(f"IP {ip}: {count} GET requests\n")
+            f.write("\n")
+        
+        # Ping Flood
+        if 'ping_flood' in results_dict:
+            f.write("=== Ping Flood Detection ===\n")
+            for ip, count in results_dict['ping_flood'].items():
+                f.write(f"IP {ip}: {count} ICMP packets sent\n")
+            f.write("\n")
+        
+        # Port Scanning
+        if 'port_scanning' in results_dict:
+            f.write("=== Port Scanning Detection ===\n")
+            for ip, ports in results_dict['port_scanning'].items():
+                f.write(f"IP {ip}: scanned {ports} unique ports\n")
+            f.write("\n")
+        
+        # Sigma Detections
+        if 'sigma_detections' in results_dict:
+            f.write("=== Sigma Rules Detections ===\n")
+            f.write(results_dict['sigma_detections'])
+            f.write("\n")
+        
+        # Summary
+        f.write("=== Summary of Detections ===\n")
+        total_alerts = sum(len(detections) for detections in results_dict.values() if isinstance(detections, dict))
+        f.write(f"Total number of alerts: {total_alerts}\n")
+        f.write(f"Number of detection types triggered: {len(results_dict)}\n")
+    
+    print(f"\nDetailed report saved to: {report_file}")
+    return report_file
 

@@ -87,37 +87,61 @@ def main(pcap_file, live, list_interfaces, interface, port, duration, chart, ove
     try:
         if overall:
             chart = True
+            results_dict = {}
             print("Executing all analyses...")
+            
             print("Generating data charts...")
             charts(pcap_file)
+            
             print("Checking IP reputations...")
-            #reputation = check_ip_reputation(pcap_file, chart)
+            reputation = check_ip_reputation(pcap_file, chart)
+            
             if find_perspective_ip:
                 print("Finding perspective IP...")
                 find_perspective_ip_nfstream(pcap_file)
+            
             print("Detecting large flows...")
-            large = detect_large_flow(pcap_file, ip_to_remove, chart)
+            results_dict['large_flows'] = detect_large_flow(pcap_file, ip_to_remove, chart)
+            
             print("Detecting asymmetrical flows...")
-            assymetrical = asymmetrical_flow(pcap_file, chart)
+            results_dict['asymmetrical_flows'] = asymmetrical_flow(pcap_file, chart)
+            
             print("Detecting unusual port usage...")
-            unusual = unusual_ports_flow(pcap_file, ip_to_remove, chart)
+            results_dict['unusual_ports'] = unusual_ports_flow(pcap_file, ip_to_remove, chart)
+            
             print("Finding DNS users...")
-            dns = find_DNS_users(pcap_file, ip_to_remove, chart)
+            results_dict['dns_users'] = find_DNS_users(pcap_file, ip_to_remove, chart)
+            
             print("Detecting SYN flood attacks...")
-            syn = detect_SYN_flood(pcap_file, ip_to_remove, chart)
+            results_dict['syn_flood'] = detect_SYN_flood(pcap_file, ip_to_remove, chart)
+            
             print("Detecting HTTP GET requests...")
-            http = detect_http_get(pcap_file, ip_to_remove, chart)
+            results_dict['http_get'] = detect_http_get(pcap_file, ip_to_remove, chart)
+            
             print("Detecting Ping flood attacks...")
-            ping = detect_ping_flood(pcap_file, ip_to_remove, chart)
+            results_dict['ping_flood'] = detect_ping_flood(pcap_file, ip_to_remove, chart)
+            
             print("Detecting port scanning...")
-            ports = detect_ports_scanner(pcap_file, ip_to_remove, chart)
+            results_dict['port_scanning'] = detect_ports_scanner(pcap_file, ip_to_remove, chart)
+            
             print("Sigma detection...")
             sigma_detections = run_sigma_analysis(pcap_file)
-            sigma = print_detections(sigma_detections)
+            results_dict['sigma_detections'] = print_detections(sigma_detections)
+            
             print("Generating map and saving to HTML...")
-            generate_ip_location_map(#reputation, 
-                                    large, assymetrical, unusual, dns, syn, http, ping, ports, sigma, pcap=pcap_file)
+            generate_ip_location_map(large=results_dict['large_flows'], 
+                                assymetrical=results_dict['asymmetrical_flows'], 
+                                unusual=results_dict['unusual_ports'], 
+                                dns=results_dict['dns_users'], 
+                                syn=results_dict['syn_flood'], 
+                                http=results_dict['http_get'], 
+                                ping=results_dict['ping_flood'], 
+                                ports=results_dict['port_scanning'],
+                                pcap=pcap_file)
 
+            print("\nGenerating comprehensive report...")
+            report_file = generate_analysis_report(pcap_file, results_dict)
+            
             generate_final_report(pcap_file, chart)
             return
 

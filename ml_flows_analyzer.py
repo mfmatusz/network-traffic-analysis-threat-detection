@@ -157,6 +157,57 @@ def finetune_model(model, X_new, y_new, n_iterations=10):
     
     return model
 
+def generate_report(results, output_file='report.txt'):
+    """Generate a simple report with analysis results"""
+    with open(output_file, 'w') as f:
+
+        f.write("=== Network Traffic Analysis Report ===\n\n")
+        f.write(f"Generated at: {pd.Timestamp.now()}\n\n")
+        
+        f.write("=== General Statistics ===\n")
+        f.write(f"Total flows analyzed: {len(results)}\n")
+        prediction_counts = results['Prediction'].value_counts()
+        f.write(f"Normal flows: {prediction_counts.get('Normal', 0)}\n")
+        f.write(f"Malicious flows: {prediction_counts.get('Malicious', 0)}\n\n")
+        
+        f.write("=== Malicious Flow Details ===\n")
+        malicious_flows = results[results['Prediction'] == 'Malicious'].sort_values('Confidence', ascending=False)
+        
+        if len(malicious_flows) > 0:
+            for idx, flow in malicious_flows.iterrows():
+                f.write(f"\nFlow {idx + 1}:\n")
+                f.write(f"Source IP: {flow['src_ip']}\n")
+                f.write(f"Destination IP: {flow['dst_ip']}\n")
+                f.write(f"Destination Port: {flow['dst_port']}\n")
+                f.write(f"Confidence: {flow['Confidence']:.2f}\n")
+        else:
+            f.write("No malicious flows detected.\n\n")
+        
+        f.write("\n=== Summary ===\n")
+        malicious_percentage = (len(malicious_flows) / len(results)) * 100 if len(results) > 0 else 0
+        f.write(f"Percentage of malicious flows: {malicious_percentage:.2f}%\n")
+
+def save_detailed_report(results, report_dir='reports'):
+    """Save detailed report with visualizations"""
+    
+    os.makedirs(report_dir, exist_ok=True)
+    timestamp = pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')
+    
+    report_file = os.path.join(report_dir, f'report_{timestamp}.txt')
+    generate_report(results, report_file)
+    
+    plt.figure(figsize=(8, 6))
+    results['Prediction'].value_counts().plot(kind='pie', autopct='%1.1f%%')
+    plt.title('Traffic Distribution')
+    plt.savefig(os.path.join(report_dir, f'traffic_distribution_{timestamp}.png'))
+    plt.close()
+    
+    plt.figure(figsize=(8, 6))
+    sns.histplot(data=results, x='Confidence', hue='Prediction', bins=20)
+    plt.title('Prediction Confidence Distribution')
+    plt.savefig(os.path.join(report_dir, f'confidence_distribution_{timestamp}.png'))
+    plt.close()
+
 @click.group()
 def cli():
     """Network Flow Classification Tool"""
@@ -196,7 +247,8 @@ def train(normal_pcap, malicious_pcap, model_output):
 @cli.command()
 @click.argument('pcap_file', type=click.Path(exists=True))
 @click.argument('model_path', type=click.Path(exists=True))
-def predict(pcap_file, model_path):
+@click.option('--report-dir', default='reports', help='Directory for saving reports')
+def predict(pcap_file, model_path, report_dir):
     """Predict on new PCAP file using trained model"""
     try:
         # Load model
@@ -206,21 +258,13 @@ def predict(pcap_file, model_path):
         # Make predictions
         print(f"Analyzing {pcap_file}...")
         results = predict_on_pcap(model, pcap_file)
-        
         print("\nPrediction Results:")
         print(results['Prediction'].value_counts())
-        '''
-        print("\nDetailed Results for Malicious Flows:")
-        malicious_flows = results[results['Prediction'] == 'Malicious'].sort_values('Confidence', ascending=False)
-        if len(malicious_flows) > 0:
-            for _, flow in malicious_flows.iterrows():
-                print(f"\nSource IP: {flow['src_ip']}")
-                print(f"Destination IP: {flow['dst_ip']}")
-                print(f"Destination Port: {flow['dst_port']}")
-                print(f"Confidence: {flow['Confidence']:.2f}")
-        else:
-            print("No malicious flows detected.")
-        '''
+        
+        # Generate and save report
+        print(f"\nGenerating report in {report_dir}...")
+        save_detailed_report(results, report_dir)
+        print("Report generation completed.")
             
     except Exception as e:
         print(f"Error during prediction: {str(e)}")
