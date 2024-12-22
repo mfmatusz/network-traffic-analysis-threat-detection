@@ -1,0 +1,21 @@
+title: Detection of traffic from unusual ports
+id: 9a4d4898-5a2a-4f1f-aa38-27f6682e944f
+description: Detects network traffic using unusual ports (not 80, 443, 22, 53)
+status: stable
+logsource:
+  category: network_traffic
+  product: pcap
+detection:
+  selection:
+    ip_proto: 6  # TCP
+  filter:
+    tcp_dport: [80, 443, 22, 53]  # Common ports to exclude
+  condition: selection and not filter | count(ip_src) by ip_src > 5  # Alert if source IP uses unusual ports more than 5 times
+fields:
+  - ip_src
+  - ip_dst
+  - tcp_flags
+  - ip_proto
+  - tcp_sport
+  - tcp_dport
+level: medium

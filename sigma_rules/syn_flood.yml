@@ -1,0 +1,18 @@
+title: Detection of SYN flood attack
+id: f4b13494-f49c-43ea-9500-178a73559ea3
+description: Detects a high number of SYN packets from the same source IP
+status: stable
+logsource:
+  category: network_traffic
+  product: pcap
+detection:
+  selection:
+    ip_proto: 6  # TCP
+    tcp_flags: 2  # SYN flag only
+  condition: selection | count(ip_src) > 100 by ip_src within 10 seconds
+fields:
+  - ip_src
+  - ip_dst
+  - tcp_flags
+  - ip_proto
+level: high
