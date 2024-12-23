@@ -156,7 +156,7 @@ def detect_with_sigma(rule, rule_content, pcap_data):
 def get_yaml_files_in_directory(directory_path):
     return [os.path.join(directory_path, f) for f in os.listdir(directory_path) if f.endswith('.yml')]
 
-def run_sigma_analysis(pcap_path, rule_dir='/home/maciej/semester5/flow_analysis/sigma_rules'): # TO-DO: Change this path
+def run_sigma_analysis(pcap_path, rule_dir='/home/maciej/semester5/flow_analysis/sigma_rules'):
     """Function for use in the main application component"""
     rule_files = get_yaml_files_in_directory(rule_dir)
     pcap_data = process_pcap(pcap_path)

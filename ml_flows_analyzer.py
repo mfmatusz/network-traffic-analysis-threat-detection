@@ -291,7 +291,7 @@ def finetune(normal_pcap, malicious_pcap, model_path, iterations):
         print("Fine-tuning model...")
         updated_model = finetune_model(model, X, y, iterations)
         
-        # Save updated model (nadpisanie istniejącego)
+        # Save updated model (overwrite existing one)
         joblib.dump(updated_model, model_path)
         print(f"\nModel updated and saved to: {model_path}")
         
@@ -304,20 +304,20 @@ def finetune_model(model, X_new, y_new, n_iterations=10):
     n_estimators_original = model.n_estimators
     print(f"Original model score on new data: {model.score(X_new, y_new)}")
     
-    # compute class weights
+    # Compute class weights
     from sklearn.utils.class_weight import compute_class_weight
     classes = np.unique(y_new)
     class_weights = compute_class_weight('balanced', classes=classes, y=y_new)
     class_weight_dict = dict(zip(classes, class_weights))
     
-    # update parameters for fine-tuning
+    # Update parameters for fine-tuning
     model.set_params(
         warm_start=True,
         class_weight=class_weight_dict,
         n_estimators=n_estimators_original + 10 
     )
     
-    # fine-tune the model
+    # Fine-tune the model
     scores = []
     for i in range(n_iterations):
         model.fit(X_new, y_new)

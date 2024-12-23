@@ -1,5 +1,5 @@
 title: Detection of ICMP Echo Requests to multiple hosts
-id: 81f9f7e1-02f6-4840-a101-5bd9f8916575  # Zaktualizowany UUID
+id: 81f9f7e1-02f6-4840-a101-5bd9f8916575  # Updated UUID
 description: Detects ICMP Echo Requests sent to multiple hosts from a single source
 status: stable
 logsource:

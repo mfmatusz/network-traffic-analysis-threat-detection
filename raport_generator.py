@@ -76,7 +76,7 @@ def check_ip_reputation(pcap, chart=False):
         data = response.json()
         
 
-        if data['data']['abuseConfidenceScore'] >= 30: # or data['data']['totalReports'] >= 50: # You can change that
+        if data['data']['abuseConfidenceScore'] >= 30:
             print(f'AbuseIPDB considers {ip} as dangerous!')
             if ip in abuseIPs:
                 abuseIPs[ip] += 1
@@ -103,11 +103,11 @@ def generate_ip_location_map(*args, pcap):
     map_center = [0, 0]
     m = folium.Map(location=map_center, zoom_start=2)
 
-    unique_ips = set()  # Zbiór, aby uniknąć duplikatów
+    unique_ips = set()  # Getting rid of the duplicates
 
-    # Walidacja argumentów i zbieranie kluczy
+    # Validating arguments and collecting keys
     for a in args:
-        if isinstance(a, dict):  # Sprawdzenie, czy `a` jest słownikiem
+        if isinstance(a, dict):
             unique_ips.update(a.keys())
         else:
             print(f"WARNING: Skipping non-dict argument: {a}")
