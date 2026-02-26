@@ -1,0 +1,18 @@
+title: Detection of ICMP Echo Requests to multiple hosts
+id: 81f9f7e1-02f6-4840-a101-5bd9f8916575  # Updated UUID
+description: Detects ICMP Echo Requests sent to multiple hosts from a single source
+status: stable
+logsource:
+  category: network_traffic
+  product: pcap
+detection:
+  selection:
+    ip_proto: 1  # ICMP
+    icmp_type: 8  # Echo Request
+  condition: selection | count(ip_dst) > 5 by ip_src within 60 seconds
+fields:
+  - ip_src
+  - ip_dst
+  - icmp_type
+  - ip_proto
+level: medium
